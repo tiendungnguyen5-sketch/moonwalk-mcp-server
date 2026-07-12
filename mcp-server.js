@@ -260,7 +260,8 @@ const server = http.createServer((req, res) => {
 
         // Send immediately connection endpoint details
         // Note: standard MCP over SSE sends the POST url in the "connect" event
-        const baseUrl = process.env.BASE_URL || `http://${req.headers.host || 'localhost:3000'}`;
+        const protocol = req.headers['x-forwarded-proto'] || (req.headers.host && req.headers.host.includes('localhost') ? 'http' : 'https');
+        const baseUrl = process.env.BASE_URL || `${protocol}://${req.headers.host || 'localhost:3000'}`;
         res.write(`event: endpoint\n`);
         res.write(`data: ${baseUrl}/message?clientId=${clientId}\n\n`);
 
@@ -309,6 +310,7 @@ const server = http.createServer((req, res) => {
 
     // C. Health Check and Info Home Page
     if (pathname === '/' && req.method === 'GET') {
+        const protocol = req.headers['x-forwarded-proto'] || (req.headers.host && req.headers.host.includes('localhost') ? 'http' : 'https');
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
         res.end(`
             <!DOCTYPE html>
@@ -330,7 +332,7 @@ const server = http.createServer((req, res) => {
                     <div>Status: <span class="status">ONLINE / HOẠT ĐỘNG</span></div>
                     <p>Đây là máy chủ kết nối ứng dụng tuân thủ giao thức <strong>Model Context Protocol (MCP)</strong>.</p>
                     <p>Sử dụng liên kết dưới đây để kết nối với Gemini Spark / Gemini Advanced:</p>
-                    <div class="url-box">http://${req.headers.host || 'localhost:3000'}/sse</div>
+                    <div class="url-box">${protocol}://${req.headers.host || 'localhost:3000'}/sse</div>
                     <h3>Các công cụ được cung cấp:</h3>
                     <ul>
                         <li><code>search_errors</code>: Tìm kiếm mã lỗi/triệu chứng của MoonWalk.</li>
